@@ -53,7 +53,7 @@ class FAQEngine:
     def __init__(self,
                  qdrant_url: str = "http://localhost:6333",
                  collection_name: str = "python-faq",
-                 embed_model_name: str = "nomic-ai/nomic-embed-text-v1.5"): # this model is coming
+                 embed_model_name: str = "nomic-ai/nomic-embed-text-v1.5"): # this model is comingfrom nomic-ai, it is a good general purpose embedding model
         
         self.collection_name = collection_name
         
@@ -103,7 +103,8 @@ class FAQEngine:
 
         print(f"Embedding and ingesting {len(faq_contexts)} documents...")
         points = []
-        for batch in batch_generator(faq_contexts, batch_size):
+        for batch in tqdm(batch_generator(faq_contexts, batch_size),total=(len(faq_contexts)//batch_size)+1,desc="Processing batches"): 
+            #batch is a list of strings
             embeddings = self.embed_model.get_text_embedding_batch(batch, show_progress_bar=False) #returns a list of vectors like [[0.1,0.2,...],[0.2,0.3,...],...]
             for context, vector in zip(batch, embeddings):
                 point = models.PointStruct(
@@ -161,6 +162,8 @@ class FAQEngine:
 # 1.instead of using uuid, we could use a hash of the content as the id, so if the content changes, we update the vector instaed of adding a new one
 #2. Instead put the knowledge base in a single string, experience it import them with different files
 #3. Can I run it in a docker container with qdrant and the model? , if so how to do it efficiently?
+
+
 
 
 
