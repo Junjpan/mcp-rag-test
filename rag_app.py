@@ -1,6 +1,7 @@
 import uuid
 from itertools import islice
 from typing import List, Dict, Any, Generator
+import hashlib
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from tqdm import tqdm
@@ -19,6 +20,7 @@ Answer: The GIL is a mutex that protects access to Python objects, preventing mu
 
 Question: What is the difference between `==` and `is` in Python?
 Answer: `==` checks for equality of value (do two objects have the same content?), while `is` checks for identity (do two variables point to the same object in memory?).
+
 
 Question: Explain list comprehensions and their benefits.
 Answer: List comprehensions provide a concise way to create lists. They are often more readable and faster than using traditional `for` loops and `.append()` calls.
@@ -39,12 +41,16 @@ Question: What are generators in Python?
 Answer: Generators are a simple way to create iterators. They are functions that use the `yield` keyword to return a sequence of values one at a time, saving memory for large datasets.
 """
 
-# Helper function for batching
+# Helper function for batching,the batch size here refer to the array size, not the actually string length
 def batch_generator(data: List[Any], batch_size: int) -> Generator[List[Any], None, None]:
     """Yields successive n-sized chunks from a list."""
     for i in range(0, len(data), batch_size):
         yield data[i : i + batch_size]
 
+def hash_content(content: str) -> str:
+    """create a stable id based on the content"""
+    # return hashlib.sha256(content.encode("utf-8")).hexdigest() #it doesn't work for Qdrant id, because it's too long
+    return hashlib.md5(content.encode("utf-8")).hexdigest() #MD5 is faster but less secure; SHA-256 is more robust against collisions, but in Qdrant the id length is limited
 
 class FAQEngine:
     """
@@ -82,6 +88,19 @@ class FAQEngine:
             qa.replace("\n", " ").strip()
             for qa in text.strip().split("\n\n")
         ]
+    
+    @staticmethod
+    def extract_question(qa_text: str) -> str:
+        """
+        Extracts the question part from a QA string.
+        Assumes the format: "Question: ... Answer: ..."
+        """
+        if qa_text.startswith("Question:"):
+            try:
+                return qa_text.split("Answer:")[0].replace("Question:", "").strip()
+            except IndexError:
+                return qa_text  # fallback to the whole text
+        return qa_text
 
     def setup_collection(self, faq_contexts: List[str], batch_size: int = 64):
         """
@@ -98,8 +117,14 @@ class FAQEngine:
                 vectors_config=models.VectorParams(
                     size=self.vector_dim,
                     distance=models.Distance.DOT
-                )
+                ),
             )
+        
+        print("Updating collection indexing threshold...")
+        self.client.update_collection(
+            collection_name=self.collection_name,
+            optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000)
+        )
 
         print(f"Embedding and ingesting {len(faq_contexts)} documents...")
         points = []
@@ -107,10 +132,11 @@ class FAQEngine:
             #batch is a list of strings
             embeddings = self.embed_model.get_text_embedding_batch(batch, show_progress_bar=False) #returns a list of vectors like [[0.1,0.2,...],[0.2,0.3,...],...]
             for context, vector in zip(batch, embeddings):
+                question = self.extract_question(context)
                 point = models.PointStruct(
-                    id=str(uuid.uuid4()),
+                    id=hash_content(question), # Use stable hash of content as ID
                     vector=vector,
-                    payload={"context": context}
+                    payload={"context": context,"question": question} # Store both question and full context in payload for richer responses
                 )
                 points.append(point)
 
@@ -121,12 +147,7 @@ class FAQEngine:
         )
 
         print("Data ingestion complete.")
-        print("Updating collection indexing threshold...")
-        self.client.update_collection(
-            collection_name=self.collection_name,
-            optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000)
-        )
-        print("Collection setup is finished.")
+
 
     def answer_question(self, query: str, top_k: int = 3) -> str:
         """
