@@ -1,0 +1,10 @@
+[
+  {
+    "question": "How do you create a variable in Python?",
+    "answer": "In Python, variables are created by assignment, e.g., x = 10. No keyword is required."
+  },
+  {
+    "question": "How do you write comments in Python?",
+    "answer": "Single-line comments use the # symbol. Multi-line comments can be done with triple quotes (''' or \"\"\")."
+  }
+]

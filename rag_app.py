@@ -179,8 +179,7 @@ class FAQEngine:
 
 
 
-#todo: Think about how to handle if the faq is already in the db, and how we want to handle updates efficiently
-# 1.instead of using uuid, we could use a hash of the content as the id, so if the content changes, we update the vector instaed of adding a new one
+#todo: 
 #2. Instead put the knowledge base in a single string, experience it import them with different files
 #3. Can I run it in a docker container with qdrant and the model? , if so how to do it efficiently?
 

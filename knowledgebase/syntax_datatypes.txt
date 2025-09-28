@@ -1,0 +1,29 @@
+Python Data Types Overview
+
+1. Numbers
+   - Integers: whole numbers, e.g., 42
+   - Floats: decimal numbers, e.g., 3.14
+   - Complex: numbers with real and imaginary parts, e.g., 2 + 3j
+
+2. Strings
+   - Defined with single or double quotes: "hello", 'world'
+   - Multiline strings use triple quotes: '''long text'''
+
+3. Booleans
+   - True or False values
+   - Often used in conditions and logical operations
+
+4. None
+   - Represents the absence of a value
+   - Example:
+     ```python
+     x = None
+     ```
+
+5. Type Checking
+   - Use the `type()` function to check a variable’s data type:
+     ```python
+     type(42)       # <class 'int'>
+     type("hi")     # <class 'str'>
+     type(True)     # <class 'bool'>
+     ```

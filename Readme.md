@@ -13,6 +13,10 @@ docker run -p 6333:6333 -p 6334:6334 \
     -v $(pwd)/qdrant_storage:/qdrant/storage \
     qdrant/qdrant
 ```
+3. Run below command to create or update vector database ,and run the mcp server
+```
+python mcp_server.py
+```
 **Port 6333** → Qdrant’s main REST API endpoint. Human-readable JSON over HTTP.
 ***Go to Qdrant dashboard***
 http://localhost:6333/dashboard
@@ -96,6 +100,40 @@ pip install -r requirements.txt
 6. Running the project
 ```
 python mcp_server.py
+```
+
+---
+## Running Data Loader Scripts
+
+The project includes data loader scripts for different file formats. You can run them in two ways:
+
+**Option 1: Run scripts directly (Recommended)**
+```bash
+python loader/load_csv.py [file_path]
+python loader/load_json.py [file_path]
+python loader/load_yaml.py [file_path]
+python loader/load_markdown.py [file_path]
+python loader/load_text.py [file_path]
+```
+
+**Option 2: Run as modules**
+```bash
+python -m loader.load_csv [file_path]
+python -m loader.load_json [file_path]
+python -m loader.load_yaml [file_path]
+python -m loader.load_markdown [file_path]
+python -m loader.load_text [file_path]
+```
+
+**Examples:**
+```bash
+# Using default files
+python loader/load_csv.py
+python loader/load_json.py
+
+# Using custom files
+python loader/load_csv.py ./data/my_data.csv
+python loader/load_json.py ./data/my_data.json
 ```
 
 How to Safely Stop Qdrant/Docker (Prevent Data Corruption)

@@ -1,0 +1,5 @@
+topic,example,description
+lists,"[1, 2, 3]","Lists are ordered, mutable collections."
+tuples,"(1, 2, 3)","Tuples are ordered, immutable collections."
+sets,"{1, 2, 3}","Sets are unordered collections of unique items."
+dicts,"{'a': 1, 'b': 2}","Dictionaries store key-value pairs."
