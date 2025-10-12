@@ -75,4 +75,4 @@ def load_allFiles(directory: str) -> List[Dict]:
     return all_entries
 
 # used for testing
-load_allFiles("./knowledgebase")
+# load_allFiles("./knowledgebase")

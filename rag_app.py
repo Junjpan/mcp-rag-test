@@ -8,12 +8,17 @@ from tqdm import tqdm
 from qdrant_client import models, QdrantClient
 
 
+# rag_app.py provides a simple example of how to set up and use the FAQEngine class to create a string FAQ knowledge base using Qdrant and HuggingFace embeddings.
+# you can connect it with the mcp_server.py to create a RAG application with tools for both FAQ retrieval and web search. right now mcp_server.py is connected with newRag.py 
+# for more sophisticated usage, it load FAQ data from external files or databases instead of hardcoding it as a string.
+
+
 PYTHON_FAQ_TEXT = """
 Question: What is the difference between a list and a tuple in Python?
 Answer: Lists are mutable, meaning their elements can be changed, while tuples are immutable. Lists use square brackets `[]` and tuples use parentheses `()`.
 
 Question: What are Python decorators?
-Answer: Decorators are a design pattern in Python that allows a user to add new functionality to an existing object without modifying its structure. They are often used for logging, timing, and access control.
+Answer: Decorators are a design pattern in Python that allows a user to add new functionality to an existing object without modifying its structure. T.phey are often used for logging, timing, and access control.
 
 Question: How does Python's Global Interpreter Lock (GIL) work?
 Answer: The GIL is a mutex that protects access to Python objects, preventing multiple threads from executing Python bytecode at the same time. This means that even on a multi-core processor, only one thread can execute Python code at once.
@@ -121,6 +126,7 @@ class FAQEngine:
             )
         
         print("Updating collection indexing threshold...")
+        # Set a indexing threshold for faster indexing during ingestion.
         self.client.update_collection(
             collection_name=self.collection_name,
             optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000)
@@ -174,14 +180,8 @@ class FAQEngine:
         
         # Combine the contexts into a final, readable output
         formatted_output = "Here are the most relevant pieces of information I found:"+"\n\n---\n\n".join(relevant_contexts)
-        return formatted_output
+        return formatted_output#
     
-
-
-
-#todo: 
-#2. Instead put the knowledge base in a single string, experience it import them with different files
-#3. Can I run it in a docker container with qdrant and the model? , if so how to do it efficiently?
 
 
 

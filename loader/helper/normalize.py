@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 
 def normalize(data,source,question=None,answer=None):
     """Ensure every data/entry has same shape/schema"""
@@ -14,7 +15,7 @@ def normalize(data,source,question=None,answer=None):
     text = " ".join(text.split())
     
     return{
-        "id":hashlib.md5(text.encode('utf-8')).hexdigest(), # Use MD5 hash of text as ID
+        "id":str(uuid.UUID(hashlib.md5(text.encode('utf-8')).hexdigest()[:32])), # Use MD5 hash of text as ID, have to use uuid format for Qdrant, otherwise Qdrant will create its own ID
         "question":question or data.get("question") or "",
         "answer":answer or data.get("answer") or "",
         "content":text,

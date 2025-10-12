@@ -5,7 +5,8 @@ import requests
 from dotenv import load_dotenv #install python-dotenv
 from mcp.server.fastmcp import FastMCP # install mcp-server
 
-from rag_app import FAQEngine, PYTHON_FAQ_TEXT
+from newRag import FAQEngine
+from loader import load_allFiles
 
 load_dotenv()
 
@@ -78,10 +79,12 @@ if __name__ == "__main__":
         qdrant_url=QDRANT_URL,
         collection_name=COLLECTION_NAME
     )
-    
+
     # Setup the collection and ingest data if not already done
-    faq_engine.setup_collection(FAQEngine.parse_faq(PYTHON_FAQ_TEXT))
+    # faq_engine.setup_collection(FAQEngine.parse_faq(PYTHON_FAQ_TEXT)) // an example to deal  with raw text
+    faq_contexts=load_allFiles("./knowledgebase")
+    faq_engine.setup_collection(faq_contexts)
     
-    # Start the MCP server to listen for requests
-    print(f"Starting MCP server at http://{HOST}:{PORT}")
-    mcp_server.start()
+    # # Start the MCP server to listen for requests
+    # print(f"Starting MCP server at http://{HOST}:{PORT}")
+    # mcp_server.start()

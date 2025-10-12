@@ -1,6 +1,6 @@
 from .helper.normalize import normalize
 from .helper.chucky import chucky
-from .core import load_csv, load_json, load_yaml, load_markdown, load_text
+from .core import load_csv, load_json, load_yaml, load_markdown, load_text, load_allFiles
 
 __all__ = [
     "normalize",
@@ -10,4 +10,5 @@ __all__ = [
     "load_markdown",
     "load_text",
     "load_csv",
+    "load_allFiles"
 ]

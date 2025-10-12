@@ -36,7 +36,7 @@
     "answer": "This block ensures that the code inside it only runs when the script is executed directly, not when it is imported as a module into another script."
   },
   {
-    "question": "What are generators in Python?",
+    "question": "What are generators in Python??",
     "answer": "Generators are a simple way to create iterators. They are functions that use the `yield` keyword to return a sequence of values one at a time, saving memory for large datasets."
   }
 ]
