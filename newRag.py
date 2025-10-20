@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Generator
 import hashlib
-import uuid
+import json
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from tqdm import tqdm
@@ -77,8 +77,6 @@ class FAQEngine:
             for entry, vector in zip(batch, embeddings):
                 # Use a stable hash of the content as ID
                 entry_id = entry.get("id") or hashlib.md5(entry["content"].encode("utf-8")).hexdigest()
-                # entry_id = str(uuid.UUID(entry_id[:32]))  # Ensure it conforms to UUID format, otherwise Qdrant will create its own ID
-                print(f"Processing entry ID: {entry_id}")
                 # Use the rest of the entry as payload (excluding id)
                 payload = {k: v for k, v in entry.items() if k != "id"}
                 point = models.PointStruct(
@@ -98,7 +96,7 @@ class FAQEngine:
         print("Data ingestion complete.")
 
 
-    def answer_question(self, query: str, top_k: int = 3) -> str:
+    def answer_question(self, query: str, top_k: int = 3) -> Dict[str, Any]:
         """
         Searches the vector database for a given query and returns the most relevant contexts.
         """
@@ -118,10 +116,16 @@ class FAQEngine:
             return "I couldn't find a relevant answer in my knowledge base."
 
         relevant_contexts = [
-            hit.payload["content"] for hit in search_result
+            {
+            "content": hit.payload.get("content") if isinstance(hit.payload, dict) else getattr(hit.payload, "content", None),
+            "source": hit.payload.get("source") if isinstance(hit.payload, dict) else getattr(hit.payload, "source", None),
+            "score": getattr(hit, "score", None) #getattr is used to retrieve the value from an object attribute, like class instance
+            }
+            for hit in search_result
         ]
-        
         # Combine the contexts into a final, readable output
-        formatted_output = "Here are the most relevant pieces of information I found:"+"\n\n---\n\n".join(relevant_contexts)
+        # formatted_output = "Here are the most relevant pieces of information I found:"+"\n\n---\n\n".join(relevant_contexts)
+        formatted_output = json.dumps(relevant_contexts, indent=2)
+        print("Formatted output:", formatted_output)
         return formatted_output#
     

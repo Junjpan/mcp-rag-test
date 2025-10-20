@@ -1,3 +1,4 @@
+**Create Vector database and Run MCP server**
 Run Docker to interact with vector database:
 1. Run docker desktop and play the container that is related to this app
 2. Run below command if you don't have a container that is already set up for this app. 
@@ -30,6 +31,12 @@ http://localhost:6333/collections
 docker compose up 
 ```
 
+**Run MCP client**
+```
+python simpleMCPClient.py
+```
+select your either rag or firecrawl tool
+
 **Correct way to stop Qdrant and Docker**:
 
 1. Stop the Qdrant container gracefully:
@@ -47,6 +54,9 @@ This command tells Qdrant to finish any writing and shut down cleanly.
 
 - Force quit Docker Desktop while containers are running.
 - Shut down your computer without stopping containers first.
+
+**Bugs:**
+Right now everytime stop the docker, we have to rebuild the vector database to be able to see all the points inside the vector database
 
 
 ---
@@ -88,7 +98,7 @@ If you prefer the built-in venv:
 ```
 python -m venv venv
 source venv/bin/activate   # macOS/Linux
-venv/Scripts/activate    # Windows
+source venv/Scripts/activate    # Windows
 ```
 
 5. Install dependencies
