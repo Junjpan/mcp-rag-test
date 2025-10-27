@@ -10,16 +10,17 @@ async def call_tool(tool: str, args: dict):
         if hasattr(client, 'list_tools'):
             tools = await client.list_tools()
             tool_info=[{'name': tool.name, 'description': tool.description} for tool in tools]
-            print(json.dumps(tool_info, indent=2, ensure_ascii=False))
+            print('avaialbe tools', json.dumps(tool_info, indent=2, ensure_ascii=False))
         
         result = await client.call_tool(tool, args)
         # Show type for debugging
 
         # Helper to attempt to pretty-print a text/JSON payload
+    
         def _print_payload_text(text: str):
             try:
                 parsed = json.loads(text)
-                print(json.dumps(parsed, indent=2, ensure_ascii=False))
+                print('result in json format',json.dumps(parsed, indent=2, ensure_ascii=False))
                 return parsed
             except Exception:
                 # Not JSON, print as-is
@@ -48,12 +49,13 @@ async def call_tool(tool: str, args: dict):
 
         if hasattr(result, "content"):
             # print('result',result)
+            # when it return the result, it usually has content, structured_content and data attributes
             content = getattr(result, "content")
             structured_content = getattr(result, "structured_content", None)
             data=getattr(result, "data", None)
 
-            print('data',data)
-            print('structured_content',structured_content)
+            # print('data',data)
+            # print('structured_content',structured_content)
             # If content is a list (e.g., [TextContent,...])
             if isinstance(content, (list, tuple)) and len(content) > 0:
                 parts = []

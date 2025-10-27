@@ -32,6 +32,10 @@ docker compose up
 ```
 
 **Run MCP client**
+
+***Notes***
+if you want to select tool greet and add, instead of running ```python mcp_server.py```, you should run ```python simpleMCPserver.py```
+
 ```
 python simpleMCPClient.py
 ```
