@@ -111,7 +111,7 @@ class FAQEngine:
             score_threshold=0.5 # Optional: filter out less relevant results
         )
 
-        # 3. Format the results into a single string
+        # 3. Format the results into a human-readable response
         if not search_result:
             return "I couldn't find a relevant answer in my knowledge base."
 
@@ -124,37 +124,45 @@ class FAQEngine:
             for hit in search_result
         ]
 
-        # Build a short human-readable summary (top results) + full JSON
-        lines = []
-        lines.append(f"Found {len(relevant_contexts)} relevant contexts for query: {query}")
-        lines.append("")
-        # Show up to top_k previews
-        for idx, ctx in enumerate(relevant_contexts[:top_k], start=1):
-            src = ctx.get("source") or "(unknown source)"
-            score = ctx.get("score")
-            # Create a short preview from content (first non-empty line, truncated)
+        # Build a clean, human-readable response
+        # Extract and combine the most relevant content
+        main_content_parts = []
+        for ctx in relevant_contexts[:top_k]:
             content = (ctx.get("content") or "").strip()
-            preview = ""
             if content:
-                # take first paragraph/line
-                preview = content.split("\n\n")[0].splitlines()[0]
-                if len(preview) > 200:
-                    preview = preview[:197] + "..."
-
-            lines.append(f"{idx}. Source: {src} (score: {score})")
-            if preview:
-                lines.append(f"   {preview}")
-            lines.append("")
-
-        # Add the full structured results as JSON for downstream parsing
-        lines.append("Full results (JSON):")
-        try:
-            full_json = json.dumps(relevant_contexts, indent=2, ensure_ascii=False)
-        except Exception:
-            full_json = str(relevant_contexts)
-        lines.append(full_json)
-
-        formatted_output = "\n".join(lines)
+                # Extract the main answer or description from content
+                # Try to get Q&A format answers or descriptions
+                if "Q:" in content and "A:" in content:
+                    # Extract the answer part
+                    answer_part = content.split("A:")[-1].strip()
+                    if answer_part:
+                        main_content_parts.append(answer_part)
+                else:
+                    # Use the content as-is if it's already formatted
+                    main_content_parts.append(content)
+        
+        # Combine the most relevant parts into a cohesive answer
+        if main_content_parts:
+            # Join relevant parts with proper spacing
+            combined_answer = "\n\n".join(main_content_parts[:2])  # Use top 2 most relevant
+            
+            # Clean up and format
+            combined_answer = combined_answer.strip()
+            
+            # If we have multiple sources, add a note
+            if len(relevant_contexts) > 0:
+                sources = [ctx.get("source") for ctx in relevant_contexts[:3] if ctx.get("source")]
+                if sources:
+                    unique_sources = list(dict.fromkeys(sources))  # Preserve order, remove duplicates
+                    if len(unique_sources) > 0:
+                        sources_note = f"\n\n(This answer is based on information from: {', '.join(unique_sources[:3])})"
+                        combined_answer += sources_note
+            
+            formatted_output = combined_answer
+        else:
+            # Fallback if no content extracted
+            formatted_output = "Found relevant information, but couldn't extract a clear answer."
+        
         print("Formatted output:", formatted_output)
         return formatted_output
     
