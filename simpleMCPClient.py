@@ -10,9 +10,10 @@ async def call_tool(tool: str, args: dict):
         if hasattr(client, 'list_tools'):
             tools = await client.list_tools()
             tool_info=[{'name': tool.name, 'description': tool.description} for tool in tools]
-            print('avaialbe tools', json.dumps(tool_info, indent=2, ensure_ascii=False))
         
         result = await client.call_tool(tool, args)
+        print(f"Raw result type: {type(result)}")
+        print(f"Raw result: {result}")
         # Show type for debugging
 
         # Helper to attempt to pretty-print a text/JSON payload

@@ -21,6 +21,14 @@ Files of interest
 
 - `simpleMCPserver.py` — defines a `FastMCP` server with two tools: `greet(name: str)` and `add(a: int, b: int)` and starts an HTTP server at `/mcp`.
 - `simpleMCPClient.py` — example async client using `fastmcp.Client` to call tools on the server.
+ - `simpleMCPClient.py` — example async client using `fastmcp.Client` to call tools on the server.
+	 Purpose: an interactive, developer-focused example client for debugging and
+	 testing your MCP server. It lists available tools, allows you to call them
+	 manually (greet, add, RAG, firecrawl), and prints the tool's returned
+	 `content`, `structured_content`, and `data` fields so you can inspect what
+	 the server (and ultimately the LLM) will receive. You do not need to run
+	 this client if you connect an external app (like Cursor) to the MCP server;
+	 the client is mainly useful for local testing and troubleshooting.
 
 ## 1) Create and activate a virtual environment
 

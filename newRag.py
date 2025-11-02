@@ -96,7 +96,7 @@ class FAQEngine:
         print("Data ingestion complete.")
 
 
-    def answer_question(self, query: str, top_k: int = 3) -> Dict[str, Any]:
+    def answer_question(self, query: str, top_k: int = 3) -> str:
         """
         Searches the vector database for a given query and returns the most relevant contexts.
         """
@@ -117,15 +117,44 @@ class FAQEngine:
 
         relevant_contexts = [
             {
-            "content": hit.payload.get("content") if isinstance(hit.payload, dict) else getattr(hit.payload, "content", None),
-            "source": hit.payload.get("source") if isinstance(hit.payload, dict) else getattr(hit.payload, "source", None),
-            "score": getattr(hit, "score", None) #getattr is used to retrieve the value from an object attribute, like class instance
+                "content": hit.payload.get("content") if isinstance(hit.payload, dict) else getattr(hit.payload, "content", None),
+                "source": hit.payload.get("source") if isinstance(hit.payload, dict) else getattr(hit.payload, "source", None),
+                "score": getattr(hit, "score", None),  # score may be None depending on client
             }
             for hit in search_result
         ]
-        # Combine the contexts into a final, readable output
-        # formatted_output = "Here are the most relevant pieces of information I found:"+"\n\n---\n\n".join(relevant_contexts)
-        formatted_output = json.dumps(relevant_contexts, indent=2)
+
+        # Build a short human-readable summary (top results) + full JSON
+        lines = []
+        lines.append(f"Found {len(relevant_contexts)} relevant contexts for query: {query}")
+        lines.append("")
+        # Show up to top_k previews
+        for idx, ctx in enumerate(relevant_contexts[:top_k], start=1):
+            src = ctx.get("source") or "(unknown source)"
+            score = ctx.get("score")
+            # Create a short preview from content (first non-empty line, truncated)
+            content = (ctx.get("content") or "").strip()
+            preview = ""
+            if content:
+                # take first paragraph/line
+                preview = content.split("\n\n")[0].splitlines()[0]
+                if len(preview) > 200:
+                    preview = preview[:197] + "..."
+
+            lines.append(f"{idx}. Source: {src} (score: {score})")
+            if preview:
+                lines.append(f"   {preview}")
+            lines.append("")
+
+        # Add the full structured results as JSON for downstream parsing
+        lines.append("Full results (JSON):")
+        try:
+            full_json = json.dumps(relevant_contexts, indent=2, ensure_ascii=False)
+        except Exception:
+            full_json = str(relevant_contexts)
+        lines.append(full_json)
+
+        formatted_output = "\n".join(lines)
         print("Formatted output:", formatted_output)
-        return formatted_output#
+        return formatted_output
     

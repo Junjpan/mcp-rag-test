@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List, Dict, Any
 import requests
 
@@ -43,7 +44,7 @@ def python_faq_retrieval_tool(query: str) -> str:
 
 
 @mcp_server.tool()
-def firecrawl_web_search_tool(query: str) -> List[Dict[str, Any]]:
+def firecrawl_web_search_tool(query: str) -> str:
     """
     Search for information on a given topic using Firecrawl.
     Use this tool when the user asks a specific question not related to the Python FAQ.
@@ -52,10 +53,9 @@ def firecrawl_web_search_tool(query: str) -> List[Dict[str, Any]]:
         query (str): The user query to search for information.
 
     Returns:
-        List[Dict[str, Any]]: A list of the most relevant web search results. Each
-        result is a mapping (dict) containing fields such as 'url', 'title', and
-        'description'. Error cases are returned as a single-item list with an
-        'error' field.
+        str: A human-readable string summary for the LLM (includes a short
+        top-results summary and the full results as a JSON string). Errors are
+        returned as an error string.
     """
     if not isinstance(query, str):
         raise TypeError("Query must be a string.")
@@ -64,7 +64,7 @@ def firecrawl_web_search_tool(query: str) -> List[Dict[str, Any]]:
     api_key = os.getenv('FIRECRAWL_API_KEY')
 
     if not api_key:
-        return [{"error": "FIRECRAWL_API_KEY environment variable is not set."}]
+        return "Error: FIRECRAWL_API_KEY environment variable is not set."
 
     payload = {"query": query, "timeout": 60000}
     headers = {
@@ -84,26 +84,54 @@ def firecrawl_web_search_tool(query: str) -> List[Dict[str, Any]]:
             data = raw.get("data", raw.get("results", None))
         else:
             data = raw
-        
-        print("Firecrawl API response data:", data)
 
         # Normalize different response shapes into List[dict]
+        normalized: List[Dict[str, Any]] = []
         if isinstance(data, dict):
-            return [data]
-        if isinstance(data, list):
-            # Ensure each item is a dict; if not, wrap it.
-            normalized: List[Dict[str, Any]] = []
+            normalized = [data]
+        elif isinstance(data, list):
             for item in data:
                 if isinstance(item, dict):
                     normalized.append(item)
                 else:
                     normalized.append({"result": item})
-            return normalized
+        else:
+            normalized = [{"result": data}]
 
-        # Fallback: wrap whatever we got as a single-item dict
-        return [{"result": data}]
+        # If the API returned an error shape, return a short error string
+        if len(normalized) == 1 and isinstance(normalized[0], dict) and "error" in normalized[0]:
+            return f"Error from Firecrawl API: {normalized[0].get('error')}"
+
+        # Build a human-readable summary plus full JSON for the LLM to consume
+        lines = []
+        lines.append(f"Found {len(normalized)} results for query: {query}")
+
+        # Add brief top results (title/url/snippet) — try common keys
+        for idx, item in enumerate(normalized[:5], start=1):
+            title = item.get("title") or item.get("name") or item.get("headline") or item.get("result")
+            url_item = item.get("url") or item.get("link") or item.get("uri")
+            desc = item.get("description") or item.get("snippet") or item.get("summary") or ""
+            brief = f"{idx}. {title or '(no title)'}"
+            if url_item:
+                brief += f" — {url_item}"
+            if desc:
+                brief += f"\n   {desc}"
+            lines.append(brief)
+
+        # Add a separator and the full JSON results for downstream parsing if needed
+        try:
+            full_json = json.dumps(normalized, indent=2, ensure_ascii=False)
+        except Exception:
+            full_json = str(normalized)
+
+        lines.append("")
+        lines.append("Full results (JSON):")
+        lines.append(full_json)
+        
+        print("Formatted output:", "\n".join(lines))
+        return "\n".join(lines)
     except requests.exceptions.RequestException as e:
-        return [{"error": f"Error connecting to Firecrawl API: {e}"}]
+        return f"Error connecting to Firecrawl API: {e}"
 
 
 if __name__ == "__main__":
